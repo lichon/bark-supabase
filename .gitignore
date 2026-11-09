@@ -1,0 +1,41 @@
+# OS noise
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
+
+# Editors
+.vscode/
+.idea/
+
+# Local environment files — never commit credentials
+.env
+.env.*
+!.env.example
+supabase/functions/.env
+supabase/functions/.env.local
+supabase/functions/.env.production
+!.env.example
+
+# APNs provider keys
+*.p8
+
+# Supabase CLI local state (also covered by supabase/.gitignore)
+supabase/.branches
+supabase/.temp
+
+# Node
+node_modules/
+dist/
+build/
+coverage/
+*.log
+
+# Python tooling (.specify scripts)
+__pycache__/
+*.pyc
+
+# Agent / spec tooling (local only)
+.pi/
+.specify/
+specs/

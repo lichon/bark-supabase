@@ -1,0 +1,6 @@
+-- Intentionally empty.
+--
+-- `supabase/config.toml` sets `db.seed.sql_paths = ["./seed.sql"]`, so this file
+-- must exist for `supabase db reset` to succeed. The Bark server ships no seed
+-- data: devices register themselves and no archive, delivery or rate-limit rows
+-- are meaningful before the first request.
