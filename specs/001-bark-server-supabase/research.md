@@ -100,6 +100,6 @@ The compatibility target is `Finb/bark-server` v2. Facts used throughout:
 
 ## D9 — Version and `/info`
 
-**Decision**: `/info` reports `version`, `build`, `arch` (runtime platform), `commit` and `devices` (count of live registrations). Version comes from a `BARK_VERSION` secret defaulting to the package version; `commit` from a `BARK_COMMIT` secret set at deploy time.
+**Decision**: `/info` reports `version`, `build`, `arch` (runtime platform) and `commit`. Version comes from a `BARK_VERSION` secret defaulting to the package version; `commit` from a `BARK_COMMIT` secret set at deploy time. It reports build identity only and never touches the database.
 
-**Rationale**: The reference endpoint's shape is part of the client contract; the fields are cheap and make deployments identifiable, satisfying FR-015 without exposing configuration details.
+**Rationale**: The reference endpoint's shape is part of the client contract; the fields are cheap and make deployments identifiable, satisfying FR-015 without exposing configuration details. A live registration count was dropped: it is not part of the client contract, it made an unauthenticated endpoint hit Postgres on every request, and operators can read the count from `bark.device_status` when they need it.

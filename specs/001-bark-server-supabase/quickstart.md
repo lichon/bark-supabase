@@ -63,7 +63,7 @@ Run these by hand once after the unit suite; they are the checks that cannot be 
 curl -s "$BASE/"                                    # 1  ok
 curl -s "$BASE/ping"                                 # 2  {code:200,message:"pong",...}
 curl -s -o /dev/null -w '%{http_code}\n' "$BASE/healthz"   # 3  200
-curl -s "$BASE/info"                                 # 4  version/devices, no secrets
+curl -s "$BASE/info"                                 # 4  version/build/arch/commit, no secrets
 curl -s -X POST "$BASE/register" -H 'content-type: application/json' \
   -d '{"device_token":"<64 hex chars>","device_key":"<key>"}'   # 5  key returned
 curl -s -X POST "$BASE/register" -H 'content-type: application/json' \
@@ -86,7 +86,7 @@ curl -s -o /dev/null -w '%{http_code}\n' -X DELETE "$BASE/push"   # 15 405
 | 1 | `GET /` | body `ok` | SC-005 |
 | 2 | `GET /ping` | `{code:200,message:"pong"}` | FR-015 |
 | 3 | `GET /healthz` | `200 ok` (fails loudly when a secret is missing) | FR-015 |
-| 4 | `GET /info` | `version`, `devices` present, no secrets | FR-015 |
+| 4 | `GET /info` | `version`, `build`, `arch`, `commit` present, no secrets | FR-015 |
 | 5 | `POST /register` with a fake token | key + `device_key` alias returned | SC-003 |
 | 6 | Re-register same key, new token | same key, token updated, `updated_at` moved | FR-002 |
 | 7 | `GET /register/<key>` | `200 success`; unknown key → `400` | FR-004 |

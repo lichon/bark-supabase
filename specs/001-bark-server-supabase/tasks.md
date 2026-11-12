@@ -145,13 +145,13 @@ description: "Task list for Bark Push Server on Supabase (unit tests only)"
 
 ### Tests for User Story 4
 
-- [X] T040 [P] [US4] Write `supabase/functions/tests/misc_test.ts`: `/` returns `ok` text, `/ping` returns `{code:200,message:"pong"}` with a timestamp, `/info` returns `version`/`build`/`arch`/`commit`/`devices` and contains no secret value, `/healthz` returns `503` with the failing variable **name** when a credential is absent
+- [X] T040 [P] [US4] Write `supabase/functions/tests/misc_test.ts`: `/` returns `ok` text, `/ping` returns `{code:200,message:"pong"}` with a timestamp, `/info` returns `version`/`build`/`arch`/`commit` and contains no secret value, `/healthz` returns `503` with the failing variable **name** when a credential is absent
 - [X] T041 [P] [US4] Write `supabase/functions/tests/config_test.ts`: every variable from [contracts/apns-push.md](./contracts/apns-push.md) is required or defaulted as documented; a malformed `.p8` yields an error naming `APNS_P8`; no error message contains the value of any secret
 
 ### Implementation for User Story 4
 
 - [X] T042 [US4] Implement `supabase/functions/_shared/config.ts`: parse and validate every variable, throw errors that name the variable and never echo its value, and expose a `readiness()` returning `{ready, failingVariable?}`
-- [X] T043 [US4] Implement `supabase/functions/_shared/routes/misc.ts`: `/`, `/ping`, `/healthz` (via `readiness()`), `/info` (live registration count)
+- [X] T043 [US4] Implement `supabase/functions/_shared/routes/misc.ts`: `/`, `/ping`, `/healthz` (via `readiness()`), `/info` (build identity only, no database access)
 - [X] T044 [US4] Create `supabase/migrations/20260101000400_bark_admin.sql`: `bark_disable_device(device_key text)` and view `bark.device_status` exposing `device_key`, `device_kind`, `created_at`, `updated_at`, `invalidated_at`, `disabled_at`, `last_error` (no tokens)
 - [X] T045 [US4] Implement structured delivery logging in `supabase/functions/_shared/apns.ts`: one JSON line per attempt with delivery id, hashed device key, APNs status, reason and latency, excluding token, content, ciphertext and credentials (FR-020)
 

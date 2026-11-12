@@ -34,7 +34,7 @@ The HTTP status line matches `code` (FR-014). Registration, notification and hea
 | `GET` | `/` | Liveness text `ok` | FR-015 |
 | `GET` | `/ping` | `{code:200,message:"pong",timestamp}` | FR-015 |
 | `GET` | `/healthz` | Readiness: `ok` when credentials load and are usable, otherwise `503` with the reason | FR-015 |
-| `GET` | `/info` | `{version, build, arch, commit, devices}` | FR-015 |
+| `GET` | `/info` | `{version, build, arch, commit}` (no database access) | FR-015 |
 | `POST` | `/register` | Register or refresh a device (JSON or form body) | FR-001–FR-003 |
 | `GET` | `/register` | Legacy registration via query parameters | FR-003 |
 | `GET` | `/register/{device_key}` | Existence check → `success` or `400` | FR-004 |

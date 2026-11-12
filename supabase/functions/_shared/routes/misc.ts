@@ -14,19 +14,16 @@ import { jsonResponse, success, textResponse } from "../response.ts";
 export interface MiscDeps {
   config: BarkConfig;
   env: Record<string, string | undefined>;
-  countDevices?: () => Promise<number>;
 }
 
 export interface MiscHandlers {
   root(): Response;
   ping(): Response;
   healthz(): Promise<Response>;
-  info(): Promise<Response>;
+  info(): Response;
 }
 
 export function createMiscHandlers(deps: MiscDeps): MiscHandlers {
-  const countDevices = deps.countDevices ?? (() => Promise.resolve(0));
-
   return {
     root(): Response {
       return textResponse("ok");
@@ -45,20 +42,13 @@ export function createMiscHandlers(deps: MiscDeps): MiscHandlers {
       return textResponse("ok");
     },
 
-    async info(): Promise<Response> {
-      let devices = 0;
-      try {
-        devices = await countDevices();
-      } catch {
-        devices = 0;
-      }
+    info(): Response {
       return jsonResponse(
         success({
           version: deps.config.version,
           build: deps.config.build,
           arch: deps.config.arch,
           commit: deps.config.commit,
-          devices,
         }),
       );
     },

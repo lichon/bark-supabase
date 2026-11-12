@@ -195,20 +195,11 @@ async function dispatch(
     case "ping":
     case "healthz":
     case "info": {
-      const config = lenientConfig(env);
-      let store: Store | null = null;
-      const handlers = createMiscHandlers({
-        config,
-        env,
-        countDevices: async () => {
-          store = store ?? await buildStore(config);
-          return await store.countDevices();
-        },
-      });
+      const handlers = createMiscHandlers({ config: lenientConfig(env), env });
       if (routeName === "root") return handlers.root();
       if (routeName === "ping") return handlers.ping();
       if (routeName === "healthz") return await handlers.healthz();
-      return await handlers.info();
+      return handlers.info();
     }
 
     case "register":

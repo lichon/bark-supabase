@@ -89,7 +89,7 @@ Then confirm:
 
 ```bash
 curl https://<ref>.supabase.co/functions/v1/bark/healthz     # ok
-curl https://<ref>.supabase.co/functions/v1/bark/info        # version, commit, devices
+curl https://<ref>.supabase.co/functions/v1/bark/info        # version, build, arch, commit
 ```
 
 ### Required configuration

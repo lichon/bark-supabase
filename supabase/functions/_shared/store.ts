@@ -40,7 +40,6 @@ export interface DatabaseClient {
     match: Record<string, unknown>,
     patch: Record<string, unknown>,
   ): Promise<QueryResult<T>>;
-  count(table: string, match?: Record<string, unknown>): Promise<number>;
 }
 
 export interface RegisterDeviceInput {
@@ -93,7 +92,6 @@ export interface Store {
   disableDevice(deviceKey: string): Promise<void>;
   /** Marks a token permanently invalid without deleting the registration (FR-013, FR-021). */
   invalidateDevice(deviceKey: string, reason: string): Promise<void>;
-  countDevices(): Promise<number>;
   /** Atomic fixed-window counter (bark_hit_rate_limit). */
   hitRateLimit(
     bucketKey: string,
@@ -216,10 +214,6 @@ export function createStore(client: DatabaseClient): Store {
       );
     },
 
-    async countDevices() {
-      return await client.count("device", { disabled_at: null });
-    },
-
     async hitRateLimit(bucketKey, limit, windowSeconds) {
       const rows = unwrap(
         await client.rpc<RateLimitResult | RateLimitResult[]>("bark_hit_rate_limit", {
@@ -246,6 +240,7 @@ interface PostgrestResult {
 
 interface FilterBuilder extends PromiseLike<PostgrestResult> {
   eq(column: string, value: unknown): FilterBuilder;
+  is(column: string, value: boolean | null): FilterBuilder;
   match(match: Record<string, unknown>): FilterBuilder;
   limit(count: number): FilterBuilder;
   maybeSingle(): Promise<PostgrestResult>;
@@ -264,9 +259,35 @@ interface SupabaseLike {
   };
 }
 
+/**
+ * One PostgREST predicate per match entry.
+ *
+ * `null` must be expressed as `is.null`, never `eq.null`: PostgREST reads the
+ * right-hand side of `eq` as a column-typed literal, so `eq.null` on
+ * `timestamptz` fails with 22007 instead of matching NULL rows. `.eq()` is used
+ * for everything else, including `false`/`0`.
+ */
+export interface MatchFilter {
+  op: "eq" | "is";
+  column: string;
+  value: unknown;
+}
+
+export function matchFilters(match: Record<string, unknown>): MatchFilter[] {
+  return Object.entries(match).map(([column, value]) => ({
+    op: value === null ? "is" : "eq",
+    column,
+    value,
+  }));
+}
+
 function applyMatch(builder: FilterBuilder, match: Record<string, unknown>): FilterBuilder {
   let scoped = builder;
-  for (const [column, value] of Object.entries(match)) scoped = scoped.eq(column, value);
+  for (const filter of matchFilters(match)) {
+    scoped = filter.op === "is"
+      ? scoped.is(filter.column, filter.value as boolean | null)
+      : scoped.eq(filter.column, filter.value);
+  }
   return scoped;
 }
 
@@ -315,16 +336,6 @@ export async function createServiceClient(config: {
       const scoped = applyMatch(supabase.from(table).update(patch), match);
       const { data, error } = await scoped.select().maybeSingle();
       return { data: (data as T) ?? null, error };
-    },
-
-    async count(table: string, match: Record<string, unknown> = {}): Promise<number> {
-      const scoped = applyMatch(
-        supabase.from(table).select("*", { count: "exact", head: true }),
-        match,
-      );
-      const result = await scoped as PostgrestResult & { count?: number | null };
-      if (result.error) throw new Error(`count failed: ${result.error.message}`);
-      return result.count ?? 0;
     },
   };
 }

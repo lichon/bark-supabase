@@ -27,37 +27,25 @@ Deno.test("GET /ping returns the pong envelope with a timestamp", async () => {
   assertEquals(body["data"], undefined);
 });
 
-Deno.test("GET /info reports build fields and the live device count", async () => {
+Deno.test("GET /info reports build fields without querying the database", async () => {
   const env = validEnv();
   const handlers = createMiscHandlers({
     config: { ...parseConfig(env), version: "1.2.3", commit: "abc1234", arch: "linux/x86_64" },
     env,
-    countDevices: () => Promise.resolve(7),
   });
 
-  const body = await jsonBody(await handlers.info());
+  const body = await jsonBody(handlers.info());
   assertEquals(body["code"], 200);
   const data = body["data"] as Record<string, unknown>;
   assertEquals(data["version"], "1.2.3");
   assertEquals(data["commit"], "abc1234");
   assertEquals(data["arch"], "linux/x86_64");
-  assertEquals(data["devices"], 7);
   assertEquals(typeof data["build"], "string");
+  assertEquals("devices" in data, false);
 
   const serialized = JSON.stringify(body);
   assertEquals(serialized.includes(env["SUPABASE_SERVICE_ROLE_KEY"] as string), false);
   assertEquals(serialized.includes("BEGIN PRIVATE KEY"), false);
-});
-
-Deno.test("/info still answers when the device count query fails", async () => {
-  const env = validEnv();
-  const handlers = createMiscHandlers({
-    config: parseConfig(env),
-    env,
-    countDevices: () => Promise.reject(new Error("db down")),
-  });
-  const body = await jsonBody(await handlers.info());
-  assertEquals((body["data"] as Record<string, unknown>)["devices"], 0);
 });
 
 Deno.test("/healthz returns ok when every credential loads", async () => {
