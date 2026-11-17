@@ -1,14 +1,16 @@
 /**
  * Structured logging.
  *
- * One JSON line per delivery attempt: delivery id, hashed device key, APNs status,
- * reason and latency. Tokens, message content, ciphertext and credentials are
+ * One JSON line per delivery attempt: delivery id, request id, hashed device key,
+ * APNs status, reason and latency. Tokens, message content, ciphertext and credentials are
  * never logged (FR-019, FR-020).
  */
 
 export interface DeliveryLogLine {
   event: "delivery_attempt";
   delivery_id: string;
+  /** Ties the log line to every `delivery` row of the same invocation. */
+  request_id: string;
   device_key_hash: string;
   device_kind: string;
   origin: string;

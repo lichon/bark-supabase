@@ -101,6 +101,7 @@ async function retryOne(
   logDelivery({
     event: "delivery_attempt",
     delivery_id: delivery.id,
+    request_id: delivery.request_id,
     device_key_hash: await hashDeviceKey(delivery.device_key),
     device_kind: delivery.device_kind,
     origin: "retry",

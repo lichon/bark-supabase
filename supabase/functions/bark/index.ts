@@ -35,6 +35,7 @@ import {
   stripPrefix,
 } from "../_shared/router.ts";
 import { providerToken } from "../_shared/jwt.ts";
+import { requestIdFrom } from "../_shared/request.ts";
 import { send as sendApns, type SendOptions } from "../_shared/apns.ts";
 import { createServiceClient, createStore, type Store } from "../_shared/store.ts";
 import type { DeliveryOrigin } from "../_shared/types.ts";
@@ -251,6 +252,7 @@ async function dispatch(
           sendNotification: makeSend(config),
           rateLimit: (bucket, limit, windowSeconds) =>
             store.hitRateLimit(bucket, limit, windowSeconds),
+          requestId: requestIdFrom(request.headers),
         },
         normalized,
         origin,

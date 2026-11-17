@@ -41,7 +41,7 @@ One row per notification addressed to one device. Satisfies FR-007 – FR-014, F
 | Column | Type | Constraints | Notes |
 |---|---|---|---|
 | `id` | `uuid` | primary key, default `gen_random_uuid()` | Also used as the idempotency/collapse handle |
-| `request_id` | `uuid` | not null | Groups the rows produced by one batch request (FR-008) |
+| `request_id` | `uuid` | not null | The id Supabase assigned to the invocation (`sb-request-id`, else `x-request-id`/`x-deno-execution-id`), so rows join to the Edge Function logs; a generated UUID when the gateway supplies none. Groups the rows produced by one batch request (FR-008) |
 | `device_key` | `text` | not null, FK → `bark.device(device_key)` on delete cascade | Target device (FR-017) |
 | `origin` | `bark.delivery_origin` | not null | |
 | `status` | `bark.delivery_status` | not null, default `pending` | |
@@ -49,7 +49,7 @@ One row per notification addressed to one device. Satisfies FR-007 – FR-014, F
 | `apns_status` | `smallint` | null | HTTP status from APNs, `0` for transport failures |
 | `apns_reason` | `text` | null | APNs `reason` string, e.g. `BadDeviceToken`, `TooManyRequests` |
 | `apns_id` | `text` | null | `apns-id` response header, for support escalation |
-| `archived` | `boolean` | not null, default false | Whether content was retained (FR-023) |
+| `archived` | `boolean` | not null, default false | Whether the sender asked for retention (`isArchive` truthy or `ttl` present, FR-023). The copy itself lives in `bark.archive`; a terminal `delivery` row never holds content. The flag is not cleared when the archive row expires, so it means "content was retained" |
 | `next_attempt_at` | `timestamptz` | null | Null = nothing to do |
 | `created_at` | `timestamptz` | not null, default `now()` | |
 | `updated_at` | `timestamptz` | not null, default `now()` | |

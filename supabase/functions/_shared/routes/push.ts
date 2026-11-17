@@ -42,6 +42,12 @@ export interface PushDeps {
   config: BarkConfig;
   sendNotification: SendNotification;
   rateLimit?: RateLimitHit;
+  /**
+   * Correlation id for this invocation. The entrypoint passes the id Supabase
+   * assigned to the call (`_shared/request.ts`); tests and direct `deno serve`
+   * runs without a gateway fall back to a generated UUID.
+   */
+  requestId?: string;
   now?: () => Date;
   hashKey?: (deviceKey: string) => Promise<string>;
   log?: typeof logDelivery;
@@ -95,7 +101,7 @@ export async function handlePush(
   }
 
   const batch = isBatchPush(params) || keys.length > 1;
-  const requestId = crypto.randomUUID();
+  const requestId = deps.requestId ?? crypto.randomUUID();
   const deliveryOrigin = effectiveOrigin(params, origin);
   const decision = archiveDecision(params);
   const now = deps.now ?? (() => new Date());
@@ -131,13 +137,16 @@ export async function handlePush(
       : null;
 
     if (suppressed !== null) {
+      // Content lives only in `bark.archive` for these rows: a suppressed
+      // delivery is terminal on creation, so it must not keep a second copy.
       const row = await deps.store.insertDelivery({
         requestId,
         deviceKey,
         origin: deliveryOrigin,
         status: "suppressed",
         attemptCount: 0,
-        payload: decision.archive ? (params as Record<string, unknown>) : null,
+        archived: decision.archive,
+        payload: null,
       });
       if (decision.archive) {
         await deps.store.insertArchive({
@@ -199,6 +208,7 @@ export async function handlePush(
     log({
       event: "delivery_attempt",
       delivery_id: row.id,
+      request_id: requestId,
       device_key_hash: await hashKey(deviceKey),
       device_kind: device.device_kind,
       origin: deliveryOrigin,
